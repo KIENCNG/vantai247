@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Đăng nhập</title>
+  </head>
+
+  <body>
+    <h2>Đăng nhập tài xế</h2>
+
+    <input id="email" placeholder="Email" /><br /><br />
+    <input id="password" type="password" placeholder="Mật khẩu" /><br /><br />
+
+    <button onclick="login()">Đăng nhập</button>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import {
+        getAuth,
+        signInWithEmailAndPassword,
+      } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+      } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDMfvsFcClupb2jSl7afHl6-HAAdTRvSa4",
+        authDomain: "vantai247-d8ce0.firebaseapp.com",
+        projectId: "vantai247-d8ce0",
+        storageBucket: "vantai247-d8ce0.firebasestorage.app",
+        messagingSenderId: "594479394374",
+        appId: "1:594479394374:web:7b99a453bdf42ca2c66447",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      window.login = async function () {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        try {
+          const userCredential = await signInWithEmailAndPassword(
+            auth,
+            email,
+            password,
+          );
+          const user = userCredential.user;
+
+          // kiểm tra tài xế có được duyệt không
+          const docRef = doc(db, "drivers", user.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+
+            if (data.status !== "active") {
+              alert("Tài khoản chưa được duyệt!");
+              return;
+            }
+
+            // lưu uid để dùng
+            localStorage.setItem("driverId", user.uid);
+
+            alert("Đăng nhập thành công!");
+
+            // chuyển sang trang tài xế
+            window.location.href = "driver.html";
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Sai tài khoản hoặc mật khẩu");
+        }
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MGD Admin | Hệ thống Điều hành Logistics Toàn diện</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background-color: #f1f5f9;
+        color: #1e293b;
+      }
+      .sidebar {
+        background-color: #ffffff;
+        border-right: 1px solid #e2e8f0;
+        width: 280px;
+        transition: all 0.3s;
+      }
+      .nav-link {
+        transition: all 0.2s;
+        border-radius: 12px;
+        color: #64748b;
+        font-weight: 600;
+        margin: 4px 16px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        text-align: left;
+      }
+      .nav-link.active {
+        background-color: #000046;
+        color: white;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 70, 0.2);
+      }
+      .card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      }
+      .status-pill {
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+      @keyframes modalIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .animate-modal {
+        animation: modalIn 0.3s ease-out;
+      }
+    </style>
+  </head>
+  <body class="flex min-h-screen">
+    <!-- SIDEBAR -->
+    <aside class="sidebar fixed inset-y-0 left-0 z-50 flex flex-col py-6">
+      <div class="px-8 mb-10">
+        <h1
+          class="text-2xl font-extrabold text-[#000046] tracking-tighter uppercase"
+        >
+          Mạnh Gia <span class="text-blue-500">Đức</span>
+        </h1>
+        <p class="text-[10px] text-gray-400 font-bold tracking-[2px] uppercase">
+          Logistics Admin
+        </p>
+      </div>
+      <nav class="flex-1 space-y-1">
+        <button
+          onclick="showPage('home')"
+          id="btn-home"
+          class="nav-link active w-[calc(100%-32px)] flex items-center px-4 py-3 text-sm"
+        >
+          <i class="fa-solid fa-chart-pie mr-3 w-5"></i> Tổng quan
+        </button>
+        <button
+          onclick="showPage('trips')"
+          id="btn-trips"
+          class="nav-link w-[calc(100%-32px)] flex items-center px-4 py-3 text-sm"
+        >
+          <i class="fa-solid fa-truck-fast mr-3 w-5"></i> Quản lý đơn hàng
+        </button>
+        <button
+          onclick="showPage('drivers')"
+          id="btn-drivers"
+          class="nav-link w-[calc(100%-32px)] flex items-center px-4 py-3 text-sm"
+        >
+          <i class="fa-solid fa-users-gear mr-3 w-5"></i> Quản lý tài xế
+        </button>
+      </nav>
+      <div class="px-6 mt-auto">
+        <button
+          onclick="openModal()"
+          class="w-full bg-[#000046] text-white py-4 rounded-2xl font-bold text-xs uppercase shadow-lg active:scale-95 transition"
+        >
+          <i class="fa-solid fa-plus mr-2"></i> Phát đơn mới
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 ml-[280px] p-8">
+      <header class="flex justify-between items-center mb-10">
+        <div>
+          <h2 id="page-title" class="text-3xl font-extrabold text-slate-800">
+            Tổng quan
+          </h2>
+          <p class="text-slate-400 text-sm font-medium italic">
+            Điều phối vận tải thời gian thực.
+          </p>
+        </div>
+        <div class="flex items-center space-x-6">
+          <div
+            class="bg-white px-4 py-2 rounded-2xl border border-slate-200 flex items-center shadow-sm"
+          >
+            <i class="fa-solid fa-calendar text-blue-500 mr-2 text-xs"></i>
+            <span
+              id="currentDate"
+              class="text-[10px] font-black text-slate-600 uppercase italic"
+              >--/--/----</span
+            >
+          </div>
+        </div>
+      </header>
+
+      <!-- PAGE HOME -->
+      <div id="home" class="page-content space-y-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="card p-6 border-l-4 border-l-blue-600">
+            <p
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+            >
+              Tiền mặt đã thu
+            </p>
+            <p id="totalMoney" class="text-2xl font-black text-slate-800 mt-1">
+              0đ
+            </p>
+          </div>
+          <div class="card p-6 border-l-4 border-l-indigo-600">
+            <p
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+            >
+              Đơn hoàn thành
+            </p>
+            <p id="totalTrips" class="text-2xl font-black text-slate-800 mt-1">
+              0
+            </p>
+          </div>
+          <div class="card p-6 border-l-4 border-l-green-500">
+            <p
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+            >
+              Tài xế Online
+            </p>
+            <p
+              id="onlineDriversCount"
+              class="text-2xl font-black text-green-500 mt-1"
+            >
+              0
+            </p>
+          </div>
+          <div class="card p-6 bg-[#000046] border-l-4 border-l-orange-500">
+            <p
+              class="text-[10px] font-bold text-blue-200 uppercase tracking-widest"
+            >
+              Công nợ khách hàng
+            </p>
+            <p id="unpaidMoney" class="text-2xl font-black text-white mt-1">
+              0đ
+            </p>
+          </div>
+        </div>
+
+        <div class="card overflow-hidden">
+          <div
+            class="p-6 border-b border-slate-50 flex justify-between items-center"
+          >
+            <h3 class="font-black text-slate-800 uppercase text-xs italic">
+              Bảng theo dõi vận hành (Real-time)
+            </h3>
+          </div>
+          <table class="w-full text-left text-sm">
+            <thead
+              class="bg-slate-50 font-black text-slate-400 uppercase text-[10px]"
+            >
+              <tr>
+                <th class="px-8 py-4">Mã đơn</th>
+                <th class="px-8 py-4">Lộ trình</th>
+                <th class="px-8 py-4">Tài xế</th>
+                <th class="px-8 py-4">Trạng thái đơn</th>
+                <th class="px-8 py-4">Thanh toán</th>
+                <th class="px-8 py-4 text-right">Cước phí</th>
+              </tr>
+            </thead>
+            <tbody
+              id="homeOrdersTable"
+              class="divide-y divide-slate-50"
+            ></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAGE TRIPS (Đã bổ sung nội dung) -->
+      <div id="trips" class="page-content hidden space-y-6">
+        <div class="card overflow-hidden">
+          <div class="p-6 border-b border-slate-50">
+            <h3 class="font-black text-slate-800 uppercase text-xs italic">
+              Danh sách toàn bộ vận đơn
+            </h3>
+          </div>
+          <table class="w-full text-left text-sm">
+            <thead
+              class="bg-slate-50 font-black text-slate-400 uppercase text-[10px]"
+            >
+              <tr>
+                <th class="px-8 py-4">Thời gian</th>
+                <th class="px-8 py-4">Điểm đi/đến</th>
+                <th class="px-8 py-4">Loại xe</th>
+                <th class="px-8 py-4">Tài xế nhận</th>
+                <th class="px-8 py-4">Trạng thái</th>
+                <th class="px-8 py-4 text-right">Giá tiền</th>
+              </tr>
+            </thead>
+            <tbody id="fullTripsTable" class="divide-y divide-slate-50"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAGE DRIVERS (Đã bổ sung nội dung) -->
+      <div id="drivers" class="page-content hidden">
+        <div class="card overflow-hidden">
+          <div class="p-6 border-b border-slate-50">
+            <h3 class="font-black text-slate-800 uppercase text-xs italic">
+              Danh sách đội ngũ tài xế
+            </h3>
+          </div>
+          <table class="w-full text-left text-sm">
+            <thead
+              class="bg-slate-50 font-black text-slate-400 uppercase text-[10px]"
+            >
+              <tr>
+                <th class="px-8 py-4">ID Tài xế</th>
+                <th class="px-8 py-4">Trạng thái hiện tại</th>
+                <th class="px-8 py-4">Vị trí cuối cùng</th>
+                <th class="px-8 py-4 text-right">Chi tiết</th>
+              </tr>
+            </thead>
+            <tbody id="driversList" class="divide-y divide-slate-50"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- MODAL -->
+    <div
+      id="orderModal"
+      class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-modal"
+      >
+        <div
+          class="p-8 bg-[#000046] text-white flex justify-between items-center"
+        >
+          <h3 class="text-xl font-black uppercase italic">
+            Phát lệnh vận chuyển
+          </h3>
+          <button onclick="closeModal()" class="text-white/50 hover:text-white">
+            <i class="fa-solid fa-xmark text-2xl"></i>
+          </button>
+        </div>
+        <form id="createOrderForm" class="p-8 space-y-4">
+          <input
+            type="text"
+            id="pickup"
+            required
+            placeholder="Điểm bốc hàng..."
+            class="w-full p-4 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none focus:ring-2 ring-blue-500/20"
+          />
+          <input
+            type="text"
+            id="dropoff"
+            required
+            placeholder="Điểm giao hàng..."
+            class="w-full p-4 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none focus:ring-2 ring-blue-500/20"
+          />
+          <input
+            type="number"
+            id="amount"
+            required
+            placeholder="Cước phí (VNĐ)"
+            class="w-full p-4 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none focus:ring-2 ring-blue-500/20"
+          />
+          <select
+            id="vehicleType"
+            class="w-full p-4 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none"
+          >
+            <option value="500kg">Xe 500kg</option>
+            <option value="2.5t">Xe 2.5 Tấn</option>
+            <option value="8t">Xe 8 Tấn</option>
+          </select>
+          <button
+            type="submit"
+            class="w-full bg-[#000046] text-white py-5 rounded-2xl font-black text-sm uppercase shadow-xl transition-all"
+          >
+            Xác nhận phát đơn
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        doc,
+        updateDoc,
+        onSnapshot,
+        addDoc,
+        serverTimestamp,
+        query,
+        orderBy,
+      } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDMfvsFcClupb2jSl7afHl6-HAAdTRvSa4",
+        authDomain: "vantai247-d8ce0.firebaseapp.com",
+        projectId: "vantai247-d8ce0",
+      };
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      window.showPage = (id) => {
+        document
+          .querySelectorAll(".page-content")
+          .forEach((p) => p.classList.add("hidden"));
+        document.getElementById(id).classList.remove("hidden");
+        document
+          .querySelectorAll(".nav-link")
+          .forEach((l) => l.classList.remove("active"));
+        document.getElementById("btn-" + id).classList.add("active");
+        // Thay đổi title dựa theo page
+        const titles = {
+          home: "Tổng quan",
+          trips: "Quản lý đơn hàng",
+          drivers: "Quản lý tài xế",
+        };
+        document.getElementById("page-title").innerText = titles[id];
+      };
+
+      window.openModal = () =>
+        document.getElementById("orderModal").classList.remove("hidden");
+      window.closeModal = () =>
+        document.getElementById("orderModal").classList.add("hidden");
+
+      // --- LIVE TRIPS TRACKING (Cho cả Home và Trips Page) ---
+      const q = query(collection(db, "trips"), orderBy("createdAt", "desc"));
+      onSnapshot(q, (snap) => {
+        const homeT = document.getElementById("homeOrdersTable");
+        const fullT = document.getElementById("fullTripsTable");
+        let totalRev = 0,
+          debtMoney = 0,
+          doneCount = 0;
+
+        homeT.innerHTML = "";
+        fullT.innerHTML = "";
+
+        snap.forEach((docSnap) => {
+          const t = docSnap.data();
+          const id = docSnap.id;
+          const time = t.createdAt?.seconds
+            ? new Date(t.createdAt.seconds * 1000).toLocaleString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "2-digit",
+                month: "2-digit",
+              })
+            : "Đang chờ...";
+
+          // Logic Tài chính
+          if (t.status === "done") {
+            doneCount++;
+            if (t.payment_status === "paid") {
+              totalRev += Number(t.amountCollected || 0);
+            } else {
+              debtMoney += Number(t.amount || 0);
+            }
+          }
+
+          const statusClass =
+            t.status === "done"
+              ? "bg-green-100 text-green-600"
+              : t.status === "assigned"
+                ? "bg-blue-100 text-blue-600"
+                : "bg-gray-100 text-gray-500";
+
+          const payText =
+            t.payment_status === "paid" ? "ĐÃ THU TIỀN" : "CHƯA THU (NỢ)";
+          const payClass =
+            t.payment_status === "paid"
+              ? "text-green-500"
+              : "text-red-500 font-black";
+
+          const rowHtml = `
+            <tr class="hover:bg-slate-50 transition border-b border-slate-50">
+              <td class="px-8 py-5 font-black text-[#000046] text-[10px]">#${id.slice(-5).toUpperCase()}</td>
+              <td class="px-8 py-5 font-bold text-slate-600 text-[11px]">${t.pickupLocation} → ${t.dropoffLocation}</td>
+              <td class="px-8 py-5 font-bold text-blue-500 text-[10px]">${t.driverEmail || "Chưa có"}</td>
+              <td class="px-8 py-5"><span class="status-pill ${statusClass}">${t.status}</span></td>
+              <td class="px-8 py-5 text-[10px] font-bold ${payClass}">${payText}</td>
+              <td class="px-8 py-5 text-right font-black text-slate-800 text-xs">${(t.amount || 0).toLocaleString()}đ</td>
+            </tr>`;
+
+          homeT.innerHTML += rowHtml;
+
+          // Row cho trang Trips chi tiết hơn một chút
+          fullT.innerHTML += `
+            <tr class="hover:bg-slate-50 transition border-b border-slate-50">
+                <td class="px-8 py-5 text-[10px] font-bold text-gray-400">${time}</td>
+                <td class="px-8 py-5 font-bold text-slate-700 text-[11px]">${t.pickupLocation} <br/> <span class="text-blue-400">tới</span> ${t.dropoffLocation}</td>
+                <td class="px-8 py-5 text-[10px] font-black uppercase text-slate-500">${t.truckType || t.vehicleType || "---"}</td>
+                <td class="px-8 py-5 text-[10px] font-bold text-blue-600">${t.driverEmail || "---"}</td>
+                <td class="px-8 py-5"><span class="status-pill ${statusClass}">${t.status}</span></td>
+                <td class="px-8 py-5 text-right font-black text-slate-800">${(t.amount || 0).toLocaleString()}đ</td>
+            </tr>
+          `;
+        });
+
+        document.getElementById("totalMoney").innerText =
+          totalRev.toLocaleString() + "đ";
+        document.getElementById("unpaidMoney").innerText =
+          debtMoney.toLocaleString() + "đ";
+        document.getElementById("totalTrips").innerText = doneCount;
+      });
+
+      // --- LIVE DRIVERS TRACKING ---
+      onSnapshot(collection(db, "drivers"), (snap) => {
+        const dList = document.getElementById("driversList");
+        const onlineCountEl = document.getElementById("onlineDriversCount");
+        let onlineCount = 0;
+        dList.innerHTML = "";
+
+        snap.forEach((docSnap) => {
+          const d = docSnap.data();
+          if (d.isOnline) onlineCount++;
+
+          const statusBadge = d.isOnline
+            ? `<span class="bg-green-100 text-green-600 px-3 py-1 rounded-full text-[9px] font-black uppercase"><i class="fa-solid fa-circle mr-1 animate-pulse"></i> Đang trực tuyến</span>`
+            : `<span class="bg-gray-100 text-gray-400 px-3 py-1 rounded-full text-[9px] font-black uppercase">Ngoại tuyến</span>`;
+
+          dList.innerHTML += `
+            <tr class="hover:bg-slate-50 transition border-b border-slate-50">
+              <td class="px-8 py-5">
+                <p class="font-black text-[#000046] text-xs">${d.email || "TX-An danh"}</p>
+                <p class="text-[9px] text-gray-400 uppercase font-bold">UID: ${docSnap.id.slice(0, 8)}</p>
+              </td>
+              <td class="px-8 py-5">${statusBadge}</td>
+              <td class="px-8 py-5 text-[10px] font-bold text-slate-500 italic"><i class="fa-solid fa-location-arrow mr-1"></i> ${d.currentLocation || "Chưa cập nhật"}</td>
+              <td class="px-8 py-5 text-right">
+                <button class="text-blue-500 hover:text-navy text-xs font-black uppercase tracking-tighter italic">Xem lộ trình</button>
+              </td>
+            </tr>`;
+        });
+        onlineCountEl.innerText = onlineCount;
+      });
+
+      // --- PHÁT ĐƠN ---
+      document
+        .getElementById("createOrderForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          try {
+            await addDoc(collection(db, "trips"), {
+              pickupLocation: document.getElementById("pickup").value,
+              dropoffLocation: document.getElementById("dropoff").value,
+              amount: Number(document.getElementById("amount").value),
+              truckType: document.getElementById("vehicleType").value, // Sửa thành truckType để đồng bộ Driver
+              status: "pending",
+              payment_status: "unpaid",
+              createdAt: serverTimestamp(),
+            });
+            Swal.fire(
+              "Thành công",
+              "Đơn hàng đã được đẩy lên hệ thống Driver!",
+              "success",
+            );
+            e.target.reset();
+            closeModal();
+          } catch (err) {
+            Swal.fire("Lỗi", "Không thể kết nối Firebase", "error");
+          }
+        });
+
+      document.getElementById("currentDate").innerText =
+        new Date().toLocaleDateString("vi-VN");
+    </script>
+  </body>
+</html>
